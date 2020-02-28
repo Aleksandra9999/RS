@@ -42,12 +42,12 @@ C = zeros(n, 1)
 
 
 for i = 1:exp
-    q(i, 1:3) = [phi, 0.19, 0.23]
+    q(i, :) = [phi, 0.19, 0.23]
     
     newl1 = l1 + 0.19
     newl2 = l2 + 0.23
     
-    traj(i, 1:3) = [newl2*cos(phi), newl2*sin(phi), newl1]
+    traj(i, :) = [newl2*cos(phi), newl2*sin(phi), newl1]
     phi = phi + dq
 end
 
