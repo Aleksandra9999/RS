@@ -1,0 +1,66 @@
+clear all
+
+W = [100, 0, 0, 0, 0, 0]'
+
+experiments = 30
+t_number = 3
+k = [1 2 0.5 ]'
+
+robot.L = [10 10]
+robot.q = zeros(experiments, 3)
+robot.t0 = zeros(1, 3)
+robot.Tbase = eye(4)
+robot.Ttool = eye(4)
+
+dq = 2*pi/experiments
+angle = 0
+dl1 = 2
+
+K1 = 1 / 73756.215
+K2 = 1 / 147512.429
+K3 = 1 / 36781.075
+K_REAL = [K1, K2, K3]'
+
+
+A_real = zeros(6, t_number)
+A = zeros(6, t_number)
+first = zeros(t_number, t_number)
+second = zeros(1, t_number)
+
+desired = zeros(experiments, t_number)
+obtained = zeros(experiments, t_number)
+calibrated = zeros(experiments, t_number)
+
+
+for i = 1:experiments
+    robot.q(i, 1:3) = inv_kin(robot.L(2)*cos(-angle), robot.L(2)*sin(-angle), robot.L(2)+dl1, robot.L)
+    angle = angle + dq
+    desired(i, 1:3) = [robot.L(2)*cos(-angle), robot.L(2)*sin(-angle), robot.L(2)+dl1]
+end
+
+for i = 1:experiments
+    Jt_real = Jt(robot.Tbase,robot.Ttool,robot.q,robot.t0,robot.L)
+    
+    for k = 1:t_number
+        A_real(1:6,k) = Jt_real(1:6,k)*(Jt_real(1:6,k)')*W
+    end
+    
+    first = first + A_real'*A_real
+    second = second + A_real'*A_real*K_REAL
+end
+
+k = first^(-1) * second
+
+for i = 1:experiments
+    
+    Jt_real = Jt(robot.Tbase,robot.Ttool,robot.q,robot.t0,robot.L)
+    
+    for k = 1:t_number
+        A_real(1:6,k) = Jt_real(1:6,k)*(Jt_real(1:6,k)')*W
+    end
+    
+    dt = A_real*K_REAL
+    ar =  dt' + desired(i)
+    obtained(i, 1:3) = [ar(1), ar(2)]
+    calibrated(i, 1:3) = A_real @ k + desired(i) - dt 
+end 
