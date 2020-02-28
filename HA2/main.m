@@ -2,20 +2,19 @@ close all
 clear all
 
 exp = 30
-n = 3
 
 l1 = 1
 l2 = 1
+q = zeros(exp, 3)
 
 t = zeros(1, 3)
-q = zeros(exp, 3)
 
 Tbase = eye(4)
 Ttool = eye(4)
 
 W = [900, 900, 900, 900, 900, 900]'
 
-
+n = 3
 
 dq = 2*pi
 dq = dq/exp
@@ -28,13 +27,18 @@ K3 = 1 / 500000
 
 K = [K1, K2, K3]'
 
-A = zeros(6, n)
-B = zeros(n, n)
-C = zeros(n, 1)
-
 traj = zeros(exp, n)
+
 not_calibrated = zeros(exp, n)
+
 calibrated = zeros(exp, n)
+
+
+A = zeros(6, n)
+
+B = zeros(n, n)
+
+C = zeros(n, 1)
 
 
 for i = 1:exp
@@ -63,10 +67,15 @@ newK = inv(B) * C
 
 for i = 1:exp
     dt = A * K + 0.0001*rand(6, 1)
-    not_calibrated(i, 1:3) = [traj(i,1) + dt(1), traj(i,2) + dt(2), traj(i,3) + dt(3)]
+    not_calibrated(i,:) = [traj(i,1) + dt(1), traj(i,2) + dt(2), traj(i,3) + dt(3)]
+    
     newdt = A * newK + 0.0001*rand(6, 1)
-    calibrated(i, 1:3) = [traj(i,1) + newdt(1) - dt(1), traj(i,2) + newdt(2) - dt(2), traj(i,3) + newdt(3) - dt(3)]
+    calibrated(i,:) = [traj(i,1) + newdt(1) - dt(1), traj(i,2) + newdt(2) - dt(2), traj(i,3) + newdt(3) - dt(3)]
 end 
+
+traj = cat(1, traj(:,:), traj(1, :))
+calibrated = cat(1, calibrated(:,:), calibrated(1, :))
+not_calibrated = cat(1, not_calibrated(:,:), not_calibrated(1, :))
 
 plot3(traj(:,1),traj(:,2),traj(:,3), 'o--')
 hold on
